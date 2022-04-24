@@ -1,35 +1,70 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use dynamic_binomial::bin_coeff::{bottom_up_bin_coeff, memoized_bin_coeff, naive_bin_coeff};
 use rand::{thread_rng, Rng};
 
 pub fn bench_bins(c: &mut Criterion) {
     let mut group = c.benchmark_group("binomial coefficent functions comparison");
-    let mut rng = thread_rng();
-    //avoid allocating memory in loop
-    let mut num_objects: u64 = 0;
-    let mut num_selections: u64 = 0;
 
-    for bound in (10..50).step_by(10) {
-        num_objects = rng.gen_range(3..bound);
-        num_selections = rng.gen_range(2..num_objects);
-
+    let mut bench_inputs = Vec::new();
+    for n in 3..=67_u64 {
+        //max size where result will fit in u64
+        for k in 2..n {
+            bench_inputs.push((n, k));
+        }
+    }
+    for (test_no, input) in bench_inputs.iter().enumerate() {
         //benchmark each function with a copy of each instance of  num objects and selections
-        group.bench_function(
-            &format!("naive/D&C {} choose {}", num_objects, num_selections),
-            |benches| benches.iter(|| black_box(naive_bin_coeff(num_objects, num_selections))),
+        group.bench_with_input(
+            BenchmarkId::new("naive/D&C", test_no + 1),
+            &input,
+            |benches, input| benches.iter(|| black_box(naive_bin_coeff(input.0, input.1))),
         );
-        group.bench_function(
-            &format!("bottom up {} choose {}", num_objects, num_selections),
-            |benches| benches.iter(|| black_box(bottom_up_bin_coeff(num_objects, num_selections))),
+        group.bench_with_input(
+            BenchmarkId::new("bottom up", test_no + 1),
+            &input,
+            |benches, input| benches.iter(|| black_box(bottom_up_bin_coeff(input.0, input.1))),
         );
-        group.bench_function(
-            &format!("memoized {} choose {}", num_objects, num_selections),
-            |benches| benches.iter(|| black_box(memoized_bin_coeff(num_objects, num_selections))),
+        group.bench_with_input(
+            BenchmarkId::new("memoized", test_no + 1),
+            &input,
+            |benches, input| benches.iter(|| black_box(memoized_bin_coeff(input.0, input.1))),
         );
     }
 
     group.finish();
 }
 
-criterion_group!(benches, bench_bins);
+pub fn bench_bins_no_black_box(c: &mut Criterion) {
+    let mut group = c.benchmark_group("binomial coefficent functions comparison no black box");
+
+    let mut bench_inputs = Vec::new();
+    for n in 3..=67_u64 {
+        //max size where result will fit in u64
+        for k in 2..n {
+            bench_inputs.push((n, k));
+        }
+    }
+    for (test_no, input) in bench_inputs.iter().enumerate() {
+        //benchmark each function with a copy of each instance of  num objects and selections
+        group.bench_with_input(
+            BenchmarkId::new("naive/D&C", test_no + 1),
+            &input,
+            |benches, input| benches.iter(|| naive_bin_coeff(input.0, input.1)),
+        );
+        group.bench_with_input(
+            BenchmarkId::new("bottom up", test_no + 1),
+            &input,
+            |benches, input| benches.iter(|| bottom_up_bin_coeff(input.0, input.1)),
+        );
+        group.bench_with_input(
+            BenchmarkId::new("memoized", test_no + 1),
+            &input,
+            |benches, input| benches.iter(|| memoized_bin_coeff(input.0, input.1)),
+        );
+    }
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_bins, bench_bins_no_black_box);
 criterion_main!(benches);

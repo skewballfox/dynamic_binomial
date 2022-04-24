@@ -9,7 +9,6 @@ name = "dynamic_binomial"
 path = "src/lib.rs"
 
 [dev-dependencies]
-rand={version="0.8.5"}
 criterion = {version="0.3",features=["html_reports"]}
 # may want to use this at some point
 #criterion-perf-events = "0.2.0"
