@@ -21,43 +21,37 @@ pub fn bottom_up_bin_coeff(num_objects: u64, num_selections: u64) -> u64 {
     };
 
     let mut sub_solutions: Vec<u64> = vec![0; num_selections as usize + 1];
-
+    sub_solutions[0] = 1;
     //these are just placeholders because the normal C[i]=C[i]+C[i+1] is
     //problematic in rust, and I generally avoid variable declarations inside
     //loops
     let mut x: u64 = 0;
     let mut y: u64 = 0;
 
-    for out_i in 1..num_objects {
-        let bound = out_i.min(num_selections);
-        for in_i in (0..bound).rev() {
-            x = sub_solutions
-                .get(in_i as usize)
-                .expect(&format!("zoinks scoob, looks like {} isn't an index", in_i))
-                .clone();
-            y = sub_solutions
-                .get(in_i as usize - 1)
-                .expect(&format!(
-                    "zoinks scoob, looks like {} isn't an index",
-                    in_i - 1
-                ))
-                .clone();
-            sub_solutions.insert(in_i as usize, x + y);
-        }
+    for out_i in 1..=num_objects as usize {
+        let bound = out_i.min(num_selections as usize);
+        (1..=bound).rev().for_each(|in_i| {
+            x = sub_solutions[in_i];
+            y = sub_solutions[in_i - 1];
+            sub_solutions[in_i] = x + y;
+        });
     }
-    let res = sub_solutions.get(num_selections as usize).unwrap().clone();
+    let res = sub_solutions[num_selections as usize].clone();
+
     res
 }
 
+///compute the binomial coefficient using a lookup table to cache solutions to subproblems
 pub fn memoized_bin_coeff(num_objects: u64, num_selections: u64) -> u64 {
     let mut lookup_table: Vec<Vec<Option<u64>>> =
-        vec![vec![None; num_selections as usize]; num_objects as usize];
+        vec![vec![None; num_selections as usize + 1]; num_objects as usize + 1];
     _memoized_bin_coeff(
         num_objects as usize,
         num_selections as usize,
         &mut lookup_table,
     )
 }
+
 fn _memoized_bin_coeff(
     num_objects: usize,
     num_selections: usize,
@@ -65,7 +59,7 @@ fn _memoized_bin_coeff(
     lookup_table: &mut Vec<Vec<Option<u64>>>,
 ) -> u64 {
     //if the value exist in the table, return it
-    if let Some(x) = lookup_table[num_objects as usize][num_selections as usize] {
+    if let Some(x) = lookup_table[num_objects][num_selections] {
         return x.clone();
     }
 
@@ -86,4 +80,21 @@ fn _memoized_bin_coeff(
     let y = _memoized_bin_coeff(num_objects - 1, num_selections - 1, lookup_table);
     lookup_table[num_objects][num_selections] = Some(x + y);
     return x + y;
+}
+
+#[cfg(test)]
+mod test {
+    use super::memoized_bin_coeff;
+
+    use super::bottom_up_bin_coeff;
+
+    #[test]
+    fn bottom_up_bin_coeff_test() {
+        assert_eq!(bottom_up_bin_coeff(20, 10), 184756);
+        assert_eq!(bottom_up_bin_coeff(33, 13), 573166440);
+    }
+    fn memoized_bin_coeff_test() {
+        assert_eq!(memoized_bin_coeff(20, 10), 184756);
+        assert_eq!(memoized_bin_coeff(33, 13), 573166440);
+    }
 }
