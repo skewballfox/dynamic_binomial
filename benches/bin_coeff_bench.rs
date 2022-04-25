@@ -1,6 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use dynamic_binomial::bin_coeff::{bottom_up_bin_coeff, memoized_bin_coeff, naive_bin_coeff};
-use rand::{thread_rng, Rng};
 
 pub fn bench_bins(c: &mut Criterion) {
     let mut group = c.benchmark_group("binomial coefficent functions comparison");

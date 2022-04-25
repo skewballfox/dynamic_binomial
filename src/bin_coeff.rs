@@ -22,7 +22,7 @@ pub fn bottom_up_bin_coeff(num_objects: u64, num_selections: u64) -> u64 {
 
     let mut sub_solutions: Vec<u64> = vec![0; num_selections as usize + 1];
     sub_solutions[0] = 1;
-    //these are just placeholders because the normal C[i]=C[i]+C[i+1] is
+    //these are just placeholders because the normal C[i]=C[i]+C[i-1] is
     //problematic in rust, and I generally avoid variable declarations inside
     //loops
     let mut x: u64 = 0;
@@ -93,8 +93,36 @@ mod test {
         assert_eq!(bottom_up_bin_coeff(20, 10), 184756);
         assert_eq!(bottom_up_bin_coeff(33, 13), 573166440);
     }
+
+    ///since the output of this function is u64, the biggest possible value of n that works
+    /// for all k is 67, this is making sure that is for the bottom up implementation
+    #[test]
+    fn bottom_up_biggest_n() {
+        assert_eq!(bottom_up_bin_coeff(67, 34), 14226520737620288370);
+    }
+
+    #[test]
+    #[should_panic(expected = "attempt to add with overflow")]
+    fn bottom_up_result_will_fail() {
+        memoized_bin_coeff(300, 100);
+    }
+
+    #[test]
     fn memoized_bin_coeff_test() {
         assert_eq!(memoized_bin_coeff(20, 10), 184756);
         assert_eq!(memoized_bin_coeff(33, 13), 573166440);
+    }
+
+    ///since the output of this function is u64, the biggest possible value of n that works
+    /// for all k is 67, this is making sure that is true for the memoized implementation
+    #[test]
+    fn memoized_biggest_n() {
+        assert_eq!(memoized_bin_coeff(67, 34), 14226520737620288370);
+    }
+
+    #[test]
+    #[should_panic(expected = "attempt to add with overflow")]
+    fn memoized_result_will_fail() {
+        memoized_bin_coeff(300, 100);
     }
 }
