@@ -2,6 +2,10 @@
 
 a comparison of the relative performance of 2 binomial coefficient functions using bottom-up dynamic programing and memoization
 
+P.S. Thanks to input from  DuckThatSits and 8-bit Zeta from discord, I'll be updating this writeup soon with more context and potential improvements to the memoized version. 
+
+I'll also eventually be running the benchmarks again after making those improvements, but finals are coming up and can't currently afford the CPU time.
+
 ## About the benchmark
 
 ### The function implementations
@@ -81,7 +85,7 @@ second, lets review the last few lines of the memorized DP version:
     return x + y;
 ```
 
-I set set the output of the two function calls to separate variables, as each function call needs to *borrow* the lookup table. if you use c++ often, the concept of ownership is similar to a [unique_pointer](https://docs.microsoft.com/en-us/cpp/cpp/how-to-create-and-use-unique-ptr-instances?view=msvc-170), save for the fact that a value can't be null in rust.  `lookup_table` can only have one owner at a time. I ws trying to avoid having a statement where lookup table was being borrowed by multiple function calls, lest I invoke the wrath of the borrow checker. This may or may not have been necessary(Murphey would be proud), but either way this implementation detail means that some computation was happening after the recursive function calls and --due to the black_box benchmark-- the compiler made no attempts to optimize this away.
+I set set the output of the two function calls to separate variables, as each function call needs to *borrow* the lookup table. if you use c++ often, the concept of ownership is similar to a [unique_pointer](https://docs.microsoft.com/en-us/cpp/cpp/how-to-create-and-use-unique-ptr-instances?view=msvc-170), save for the fact that a value can't be null in rust.  `lookup_table` can only have one owner at a time. I was trying to avoid having a statement where lookup table was being borrowed by multiple function calls, lest I invoke the wrath of the borrow checker. This may or may not have been necessary(Murphey would be proud), but either way this implementation detail means that some computation was happening after the recursive function calls and --due to the black_box benchmark-- the compiler made no attempts to optimize this away.
 
 third, there may be some overhead with the use of `Option<u64>` compared to `u64`, I don't believe this should make a substantial difference, but honestly I'm not sure, and currently having trouble finding documentation that could help confirm one way or another.
 
